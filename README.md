@@ -23,7 +23,7 @@ socks 代理的端口为 `1080`。
 
 ### Using as a local proxy with Docker
 ```
-docker run -d --name=warp -e FAMILIES_MODE=full -e WARP_LICENSE=xxxxxxxx-xxxxxxxx-xxxxxxxx -p 127.0.0.1:1080:1080 -v ${PWD}/warp:/var/lib/cloudflare-warp aleskxyz/warp-svc:latest
+docker run -d --name=warp -e FAMILIES_MODE=full -e WARP_LICENSE=xxxxxxxx-xxxxxxxx-xxxxxxxx -p 127.0.0.1:1080:1080 -v ${PWD}/warp:/var/lib/cloudflare-warp zhengxiongzhao/warp-svc:latest
 ```
 You can verify warp by visiting this url:
 ```
@@ -44,14 +44,14 @@ Success
 version: "3"
 services:
   warp:
-    image: superng6/warp-proxy:latest
+    image: zhengxiongzhao/warp-svc:latest
     ports:
       - 1080:1080
     restart: always
     environment:
-      - "PROXY_PORT=1080"
-      - "WARP_LICENSE="
-      - "FAMILIES_MODE=off"
+      - PROXY_PORT=1080
+      - WARP_LICENSE=
+      - FAMILIES_MODE=off
     volumes:
       - ./warp:/var/lib/cloudflare-warp
 ```
