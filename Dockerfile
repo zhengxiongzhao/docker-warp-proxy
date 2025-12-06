@@ -2,7 +2,6 @@ FROM ubuntu:22.04
 
 ENV PROXY_PORT=1080 \
     TZ=Asia/Shanghai \
-    WARP_LICENSE= \
     FAMILIES_MODE=off \
     WARP_LICENSE=
 
