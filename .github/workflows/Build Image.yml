@@ -57,6 +57,6 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            superng6/warp-proxy:${{ steps.set-version.outputs.version }}
-            superng6/warp-proxy:latest  
+            zhengxiongzhao/warp-svc:${{ steps.set-version.outputs.version }}
+            zhengxiongzhao/warp-svc:latest  
 
