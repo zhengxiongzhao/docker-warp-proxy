@@ -28,7 +28,7 @@ jobs:
         id: set-version
         run: |
           echo "::set-output name=version::$(date +"%Y%m%d")"
-          echo $(date +"%Y%m%d")"
+          echo $(date +"%Y%m%d")
           echo "::set-output name=status::success"
 
       # Build and push
