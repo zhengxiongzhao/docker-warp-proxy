@@ -33,11 +33,34 @@ echo "Starting WARP configuration..."
 
 if [[ -n $WARP_LICENSE ]]; then
   echo "Applying license key..."
-  warp-cli --accept-tos registration license "${WARP_LICENSE}"
+  
+  # 尝试设置许可证
+  if warp-cli --accept-tos registration license "${WARP_LICENSE}"; then
+      echo "License applied successfully."
+  else
+      # --- 许可证设置失败的回退逻辑 ---
+      echo "WARN: License application failed. ($?)"
+      echo "Attempting to reset registration and use free WARP mode..."
+      
+      # 尝试注销旧的/失败的注册，并执行新的免费注册
+      # 如果注销失败则忽略，但必须尝试新注册
+      warp-cli registration delete 2>/dev/null || true 
+      
+      if warp-cli --accept-tos registration new; then
+          echo "SUCCESS: Successfully registered for free WARP."
+      else
+          echo "CRITICAL ERROR: Failed to register for free WARP. Cannot proceed."
+          exit 1 # 无法注册，脚本退出失败
+      fi
+  fi
 else
-  echo "Attempting free registration..."
-  warp-cli --accept-tos registration new
+  echo "No license key provided. Attempting free registration..."
+  if ! warp-cli --accept-tos registration new; then
+      echo "CRITICAL ERROR: Failed to register for free WARP. Cannot proceed."
+      exit 1 # 无法注册，脚本退出失败
+  fi
 fi
+
 
 set -e 
 
