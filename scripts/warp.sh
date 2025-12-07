@@ -23,8 +23,11 @@ function wait_for_ipc {
 
 # 确保 warp-svc-core 已经启动并监听 IPC
 if ! wait_for_ipc; then
-    exit 1  # 立即退出，Supervisor 不会重启
+    echo "ERROR: IPC Timeout. Aborting configuration." 
+    exit 1  # 立即退出，避免 Supervisor FATAL
 fi
+echo "IPC Ready. Starting configuration."
+
 
 # --- 1. 配置 WARP 模式 (如果 warp-cli 无法连接，它会失败) ---
 echo "Starting WARP configuration..."
@@ -76,10 +79,16 @@ warp-cli --accept-tos dns log disable
 # Set the families mode based on the value of the FAMILIES_MODE variable
 warp-cli --accept-tos dns families "${FAMILIES_MODE}"
 
-# Connect to the WARP service
-warp-cli --accept-tos connect
 
 # Check if warp-cli is connected
-warp-cli --accept-tos status
+warp-cli --accept-tos connect || { 
+    echo "CRITICAL: WARP Connect Failed!"
+    exit 1
+}
+
+warp-cli --accept-tos status || { 
+    echo "CRITICAL: WARP Status Check Failed!"
+    exit 1
+}
 
 exit 0
