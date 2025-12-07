@@ -7,42 +7,60 @@ if pkill -x warp-svc -9; then
   echo "Existing warp-svc process killed."
 fi
 
-# Start warp-svc in the background and redirect output to exclude dbus messages
+
+# 启动 WARP 核心服务 (后台)
 warp-svc > >(grep -iv dbus) 2> >(grep -iv dbus >&2) &
 WARP_PID=$!
+echo "Initial wait: Sleeping for ${WARP_SLEEP} seconds..."
+sleep "$WARP_SLEEP"
 
-sleep "${WARP_SLEEP:-5}"
+# 信号处理
+trap "echo 'Stopping warp-svc...'; kill -TERM $WARP_PID; wait $WARP_PID; exit" SIGTERM SIGINT
 
-# Trap SIGTERM and SIGINT, and forward those signals to the warp-svc process
-trap "echo 'Stopping warp-svc...'; kill -TERM $WARP_PID; exit" SIGTERM SIGINT
-
-# Maximum number of attempts to try the registration
-MAX_ATTEMPTS=5
-attempt_counter=0
-
-echo "Attempting to start warp-svc and register..."
-
-# Function to check service status and attempt registration
-function attempt_registration {
-  until warp-cli --accept-tos registration new &> /dev/null; do
-    echo "Wait for warp-svc to start... Attempt $((++attempt_counter)) of $MAX_ATTEMPTS"
+# --- 关键函数：等待 IPC 就绪 (通用检查) ---
+function wait_for_ipc {
+  MAX_ATTEMPTS=10
+  attempt_counter=0
+  echo "Waiting for warp-svc IPC socket..."
+  until warp-cli status &> /dev/null; do
     sleep 1
     if [[ $attempt_counter -ge $MAX_ATTEMPTS ]]; then
-      echo "Failed to register after $MAX_ATTEMPTS attempts. Exiting."
+      echo "CRITICAL ERROR: warp-svc IPC never came up. Exiting."
       return 1
     fi
+    attempt_counter=$((attempt_counter + 1))
   done
-  echo "warp-svc has been started and registered successfully!"
+  return 0
 }
 
-# Call the registration function
-if attempt_registration; then
-  echo "Service started and registered successfully."
-else
-  echo "There was an issue starting the service or registering. Check logs for details."
+# --- 1. 等待核心服务就绪 ---
+if ! wait_for_ipc; then
   kill $WARP_PID
   exit 1
 fi
+echo "warp-svc IPC ready."
+
+# --- 2. 许可证/注册逻辑 (如果许可证存在，则应用许可证) ---
+
+if [[ -n $WARP_LICENSE ]]; then
+  echo "Applying license key..."
+  # 尝试设置许可证。如果许可证已存在且有效，这会成功。
+  # 如果许可证不存在，这会尝试注册。
+  if ! warp-cli --accept-tos registration license "${WARP_LICENSE}"; then
+      echo "ERROR: Failed to apply license. Check key validity."
+      # 即使设置失败，我们也不立即退出，尝试继续配置。
+  fi
+else
+  # 如果没有许可证，尝试使用免费注册
+  echo "No license key provided. Attempting free registration..."
+  if ! warp-cli --accept-tos registration new; then
+      echo "ERROR: Free registration failed."
+      kill $WARP_PID
+      exit 1
+  fi
+fi
+
+set -e 
 
 # Set the proxy port to 40000
 warp-cli --accept-tos proxy port 40000
@@ -55,11 +73,6 @@ warp-cli --accept-tos dns log disable
 
 # Set the families mode based on the value of the FAMILIES_MODE variable
 warp-cli --accept-tos dns families "${FAMILIES_MODE}"
-
-# Set the WARP_LICENSE if it is not empty
-if [[ -n $WARP_LICENSE ]]; then
-  warp-cli --accept-tos registration license "${WARP_LICENSE}"
-fi
 
 # Connect to the WARP service
 warp-cli --accept-tos connect
