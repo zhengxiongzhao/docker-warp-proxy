@@ -1,4 +1,13 @@
 # warp-svc
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/zhengxiongzhao/warp-svc)](https://hub.docker.com/r/zhengxiongzhao/warp-svc)
+[![Publish Docker image to Docker Hub](https://github.com/zhengxiongzhao/docker-warp-proxy/actions/workflows/publish-docker-image.yml/badge.svg?event=push)](https://hub.docker.com/r/zhengxiongzhao/warp-svc)
+
+
+> **使用最新版本的`warp-svc`编译， 版本号：2025.9.558.0**  
+
+> **必要条件： 需要国际网络访问，才能使用！！！**
+
 将 Cloudflare WARP 客户端作为 docker 中的 socks5 服务器
 
 这个 dockerfile 会创建一个带有适用于 Linux 的 Cloudflare WARP 官方客户端的 docker 镜像，并提供一个 socks5 代理服务器，以便在本地计算机或 docker compose 或 Kubernetes 中的其他 docker 容器中的其他兼容应用程序中使用。
