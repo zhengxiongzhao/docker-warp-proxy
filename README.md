@@ -1,7 +1,7 @@
 # warp-svc
 
+[![Publish Docker image to Docker Hub](https://img.shields.io/badge/Publish%20Docker%20image%20to%20Docker%20Hub-latest-g?logo=docker)](https://hub.docker.com/r/zhengxiongzhao/warp-svc) 
 [![Docker Pulls](https://img.shields.io/docker/pulls/zhengxiongzhao/warp-svc)](https://hub.docker.com/r/zhengxiongzhao/warp-svc)
-[![Publish Docker image to Docker Hub](https://github.com/zhengxiongzhao/docker-warp-proxy/actions/workflows/publish-docker-image.yml/badge.svg?event=push)](https://hub.docker.com/r/zhengxiongzhao/warp-svc)
 
 
 > **使用最新版本的`warp-svc`编译， 版本号：2025.9.558.0**  
