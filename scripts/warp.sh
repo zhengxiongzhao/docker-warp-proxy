@@ -1,5 +1,31 @@
 #!/bin/bash
 
+# --- 1. 定义 IPC 就绪检查函数 ---
+function wait_for_ipc {
+    MAX_ATTEMPTS=20  # 增加尝试次数以覆盖 Supervisor 的启动时间
+    attempt_counter=0
+    # 检查 warp-svc IPC 是否响应
+    until warp-cli status &> /dev/null; do
+        echo "Waiting for warp-svc IPC to be ready... Attempt $attempt_counter/$MAX_ATTEMPTS"
+        sleep 1
+        if [ $attempt_counter -ge $MAX_ATTEMPTS ]; then
+            echo "CRITICAL: IPC failed to respond. Shutting down."
+            return 1
+        fi
+        attempt_counter=$((attempt_counter + 1))
+    done
+    return 0
+}
+
+# -----------------------------------------------
+# 核心配置逻辑
+# -----------------------------------------------
+
+# 确保 warp-svc-core 已经启动并监听 IPC
+if ! wait_for_ipc; then
+    exit 1  # 立即退出，Supervisor 不会重启
+fi
+
 # --- 1. 配置 WARP 模式 (如果 warp-cli 无法连接，它会失败) ---
 echo "Starting WARP configuration..."
 
