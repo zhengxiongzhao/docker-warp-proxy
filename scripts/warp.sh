@@ -64,15 +64,10 @@ fi
 # Connect to the WARP service
 warp-cli --accept-tos connect
 
-while true; do
-  # Check if warp-cli is connected
-  if warp-cli --accept-tos status | grep -iq connected; then
-    echo "Connected successfully."
-  else
-    echo "Not connected. Checking again..."
-  fi
-  sleep ${WARP_SLEEP:-5}
-done
+# Check if warp-cli is connected
+warp-cli --accept-tos status
+
+socat tcp-listen:${PROXY_PORT},reuseaddr,fork tcp:localhost:40000 &
 
 # Wait for warp-svc process to finish
 wait $WARP_PID
