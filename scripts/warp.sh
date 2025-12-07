@@ -68,14 +68,10 @@ while true; do
   # Check if warp-cli is connected
   if warp-cli --accept-tos status | grep -iq connected; then
     echo "Connected successfully."
-    # If connected, start healthcheck and break the loop
-    supervisorctl start healthcheck
-    break
   else
     echo "Not connected. Checking again..."
   fi
-  # Wait for a specified time before checking again
-  sleep 1
+  sleep ${WARP_SLEEP:-5}
 done
 
 # Wait for warp-svc process to finish
