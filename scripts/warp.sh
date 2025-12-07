@@ -2,7 +2,7 @@
 
 # --- 1. 定义 IPC 就绪检查函数 ---
 function wait_for_ipc {
-    MAX_ATTEMPTS=20  # 增加尝试次数以覆盖 Supervisor 的启动时间
+    MAX_ATTEMPTS=40  # 增加尝试次数以覆盖 Supervisor 的启动时间
     attempt_counter=0
     # 检查 warp-svc IPC 是否响应
     until warp-cli status &> /dev/null; do
