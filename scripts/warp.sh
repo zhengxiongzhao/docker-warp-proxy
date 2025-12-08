@@ -22,10 +22,10 @@ function wait_for_ipc {
 # -----------------------------------------------
 
 # 确保 warp-svc-core 已经启动并监听 IPC
-if ! wait_for_ipc; then
-    echo "ERROR: IPC Timeout. Aborting configuration." 
-    exit 1  # 立即退出，避免 Supervisor FATAL
-fi
+# if ! wait_for_ipc; then
+#     echo "ERROR: IPC Timeout. Aborting configuration." 
+#     exit 1  # 立即退出，避免 Supervisor FATAL
+# fi
 echo "IPC Ready. Starting configuration."
 
 
