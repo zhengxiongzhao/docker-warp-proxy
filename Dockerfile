@@ -1,4 +1,5 @@
-FROM docker.m.daocloud.io/ubuntu:22.04
+FROM debian:stable-slim
+ENV DEBIAN_FRONTEND=noninteractive
 
 ENV PROXY_PORT=1080 \
     TZ=Asia/Shanghai \
@@ -12,7 +13,7 @@ RUN apt-get update && \
   curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
   echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/cloudflare-client.list && \
   apt-get update && \
-  apt-get install cloudflare-warp -y && \
+  apt-get install cloudflare-warp -y --no-install-recommends  && \
   rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/run/dbus && \
