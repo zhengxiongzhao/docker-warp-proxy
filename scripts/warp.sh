@@ -1,71 +1,43 @@
 #!/bin/bash
+set -e
 
-# --- 1. 定义 IPC 就绪检查函数 ---
-function wait_for_ipc {
-    MAX_ATTEMPTS=40  # 增加尝试次数以覆盖 Supervisor 的启动时间
-    attempt_counter=0
-    # 检查 warp-svc IPC 是否响应
-    until warp-cli status &> /dev/null; do
-        echo "Waiting for warp-svc IPC to be ready... Attempt $attempt_counter/$MAX_ATTEMPTS"
-        sleep 1
-        if [ $attempt_counter -ge $MAX_ATTEMPTS ]; then
-            echo "CRITICAL: IPC failed to respond. Shutting down."
-            return 1
+echo "Waiting for Warp daemon..."
+for i in {1..30}; do
+    if warp-cli status >/dev/null 2>&1; then
+        echo "Warp daemon is ready."
+        break
+    fi
+    echo "Daemon not ready yet, waiting 1s..."
+    sleep 1
+done
+
+warp-cli --accept-tos registration delete 2>/dev/null || true
+
+# 检查当前 License 是否和环境变量一致
+current_license=$(warp-cli --accept-tos registration show | grep 'License:' | awk '{print $2}' || echo "")
+
+if [ -n "$WARP_LICENSE" ]; then
+    if [ "$current_license" = "$WARP_LICENSE" ]; then
+        echo "Current License matches \$WARP_LICENSE, no need to re-register."
+    else
+        echo "Applying License key..."
+        if warp-cli --accept-tos registration license "$WARP_LICENSE" | grep -q "Success"; then
+            echo "License applied successfully."
+        else
+            echo "License failed, registering new..."
+            warp-cli --accept-tos registration new || true
         fi
-        attempt_counter=$((attempt_counter + 1))
-    done
-    return 0
-}
-
-# -----------------------------------------------
-# 核心配置逻辑
-# -----------------------------------------------
-
-# 确保 warp-svc-core 已经启动并监听 IPC
-# if ! wait_for_ipc; then
-#     echo "ERROR: IPC Timeout. Aborting configuration." 
-#     exit 1  # 立即退出，避免 Supervisor FATAL
-# fi
-echo "IPC Ready. Starting configuration."
-
-
-# --- 1. 配置 WARP 模式 (如果 warp-cli 无法连接，它会失败) ---
-echo "Starting WARP configuration..."
-
-# --- 2. 许可证/注册逻辑 (如果许可证存在，则应用许可证) ---
-
-if [[ -n $WARP_LICENSE ]]; then
-  echo "Applying license key..."
-  
-  # 尝试设置许可证
-  if warp-cli --accept-tos registration license "${WARP_LICENSE}"; then
-      echo "License applied successfully."
-  else
-      # --- 许可证设置失败的回退逻辑 ---
-      echo "WARN: License application failed. ($?)"
-      echo "Attempting to reset registration and use free WARP mode..."
-      
-      # 尝试注销旧的/失败的注册，并执行新的免费注册
-      # 如果注销失败则忽略，但必须尝试新注册
-      warp-cli registration delete 2>/dev/null || true 
-      
-      if warp-cli --accept-tos registration new; then
-          echo "SUCCESS: Successfully registered for free WARP."
-      else
-          echo "CRITICAL ERROR: Failed to register for free WARP. Cannot proceed."
-          exit 1 # 无法注册，脚本退出失败
-      fi
-  fi
+    fi
 else
-  echo "No license key provided. Attempting free registration..."
-  if ! warp-cli --accept-tos registration new; then
-      echo "CRITICAL ERROR: Failed to register for free WARP. Cannot proceed."
-      exit 1 # 无法注册，脚本退出失败
-  fi
+    # 如果没有环境变量 License，注册新
+    if [ -n "$current_license" ]; then
+        echo "License exists: $current_license, skipping new registration."
+    else
+        echo "No License found, registering new..."
+        warp-cli --accept-tos registration new || true
+    fi
 fi
 
-
-set -e 
 
 # Set the proxy port to 40000
 warp-cli --accept-tos proxy port 40000

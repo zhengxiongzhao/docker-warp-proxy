@@ -12,34 +12,6 @@
 # https://github.com/shaonianche/warp-clash-api?tab=readme-ov-file
 # https://github.com/TunMax/canal/tree/master
 
-warp-cli --accept-tos registration delete && warp-cli --accept-tos registration new && warp-cli --accept-tos registration license "m27lV94x-y82rsM64-n7aAk250"
-Success
-Success
-Success
-
-warp-cli registration show
-
-warp-cli --accept-tos connect
-
-warp-cli --accept-tos status 
-Status update: Connected
-Network: healthy
-# OR
-warp-cli --accept-tos status 
-Status update: Unable
-Reason: Registration Missing due to: Daemon Startup
-
-
-output=$(warp-cli --accept-tos registration new 2>&1 | tr -d '\r\n')
-if [[ "$output" == "success" ]]; then
-if ! warp-cli --accept-tos status | grep -q "Status update: Unable"; then
-  echo "WARP not registered, registering..."
-  warp-cli --accept-tos registration new && warp-cli --accept-tos registration license "m27lV94x-y82rsM64-n7aAk250"
-else
-  if register:
-
-fi
-
 curl -x socks5h://127.0.0.1:1080 -sL https://cloudflare.com/cdn-cgi/trace | grep warp
 ```
 
@@ -84,6 +56,34 @@ Success
 ```
 ### Using as a proxy for other containers with docker-compose
 
+> WARP 需要创建一个虚拟网卡 (TUN 设备)
+
+**你需要确保 Docker 容器是用以下参数启动的**
+
+    --device /dev/net/tun: 允许容器访问宿主机的 TUN 设备。
+    --cap-add NET_ADMIN: 允许容器修改网络配置（创建网卡、修改路由表）。
+
+```
+# 宿主机开启转发
+sysctl -w net.ipv4.ip_forward=1
+
+# 宿主机防火墙允许伪装（RHEL 9 必须）
+firewall-cmd --zone=public --add-masquerade --permanent
+
+# 宿主机检查状态
+lsmod | grep -E "nf_conntrack|tun"
+
+# 加载模块
+modprobe nf_conntrack
+modprobe tun
+
+# 设置自动加载
+echo -e "nf_conntrack\ntun" > /etc/modules-load.d/custom-modules.conf
+
+# 检查
+ls -l /dev/net/tun
+```
+
 ```
 version: "3"
 services:
@@ -92,6 +92,17 @@ services:
     ports:
       - 1080:1080
     restart: always
+    privileged: true
+    device:
+      - /dev/net/tun
+    cap-add:
+      - NET_ADMIN
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.disable_ipv6=0
     environment:
       - PROXY_PORT=1080
       - WARP_LICENSE=
