@@ -93,9 +93,9 @@ services:
       - 1080:1080
     restart: always
     privileged: true
-    device:
+    devices:
       - /dev/net/tun
-    cap-add:
+    cap_add:
       - NET_ADMIN
     dns:
       - 1.1.1.1
