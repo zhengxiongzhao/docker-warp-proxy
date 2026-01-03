@@ -34,8 +34,8 @@ else
 fi
 
 # warp-cli --accept-tos proxy port "${PROXY_PORT}"
-warp-cli --accept-tos mode proxy
-warp-cli --accept-tos dns families "${FAMILIES_MODE:-off}"
+warp-cli --accept-tos mode proxy 2>/dev/null || true
+warp-cli --accept-tos dns families "${FAMILIES_MODE:-off}" 2>/dev/null || true
 warp-cli --accept-tos connect
 warp-cli --accept-tos status
 
