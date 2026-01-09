@@ -17,7 +17,7 @@ ENV PROXY_PORT=1080 \
 
 
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
-COPY --chmod=755 scripts /scripts
+COPY --chmod=755 ./scripts /scripts
 
 RUN apt-get update && \
   apt-get install curl wget ca-certificates dbus gpg tzdata gnupg lsb-release sudo jq ipcalc iputils-ping -y && \
