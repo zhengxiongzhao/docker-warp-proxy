@@ -1,28 +1,30 @@
 #!/bin/bash
 set -e
 
+export WARP_SLEEP=${WARP_SLEEP:-2}
 export GOST_LOGGER_LEVEL=${LOG_LEVEL:-error}
 export GOMAXPROCS=$(nproc)
-ulimit -n 65535
+
+sudo ulimit -n 65535
 
 if [ ! -e /dev/net/tun ]; then
-    mkdir -p /dev/net
-    mknod /dev/net/tun c 10 200
-    chmod 600 /dev/net/tun
+    sudo mkdir -p /dev/net
+    sudo mknod /dev/net/tun c 10 200
+    sudo chmod 600 /dev/net/tun
 fi
 
-mkdir -p /run/dbus
+sudo mkdir -p /run/dbus
 if [ -f /run/dbus/pid ]; then
-    rm /run/dbus/pid
+    sudo rm /run/dbus/pid
 fi
-dbus-daemon --config-file=/usr/share/dbus-1/system.conf
+sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf
 
 
-/usr/bin/warp-svc --accept-tos > /dev/null &
+sudo /usr/bin/warp-svc --accept-tos > /dev/null &
 
 WARP_PID=$!
 
-sleep 5
+sleep "$WARP_SLEEP"
 
 current_license=$(warp-cli --accept-tos registration show | grep 'License:' | awk '{print $2}' || echo "")
 
