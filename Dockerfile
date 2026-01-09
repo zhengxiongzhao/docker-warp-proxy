@@ -46,6 +46,6 @@ RUN mkdir -p /home/warp/.local/share/warp && \
     echo -n 'yes' > /home/warp/.local/share/warp/accepted-tos.txt
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-  CMD /script/healthcheck.sh
+  CMD /scripts/healthcheck.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
