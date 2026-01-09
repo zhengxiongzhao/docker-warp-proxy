@@ -1,9 +1,24 @@
 #!/bin/bash
+set -e
+
 export GOST_LOGGER_LEVEL=${LOG_LEVEL:-error}
 export GOMAXPROCS=$(nproc)
 ulimit -n 65535
 
-/usr/bin/warp-svc > /dev/null &
+if [ ! -e /dev/net/tun ]; then
+    mkdir -p /dev/net
+    mknod /dev/net/tun c 10 200
+    chmod 600 /dev/net/tun
+fi
+
+mkdir -p /run/dbus
+if [ -f /run/dbus/pid ]; then
+    rm /run/dbus/pid
+fi
+dbus-daemon --config-file=/usr/share/dbus-1/system.conf
+
+
+/usr/bin/warp-svc --accept-tos > /dev/null &
 
 WARP_PID=$!
 
@@ -20,8 +35,8 @@ if [ -n "$WARP_LICENSE" ]; then
             echo "License applied successfully."
         else
             echo "License failed, registering new..."
-            warp-cli --accept-tos registration delete 2>/dev/null || true
-            warp-cli --accept-tos registration new || true
+            warp-cli --accept-tos registration delete > /dev/null || true
+            warp-cli --accept-tos registration new  > /dev/null || true
         fi
     fi
 else
@@ -29,14 +44,14 @@ else
         echo "License exists: $current_license, skipping new registration."
     else
         echo "No License found, registering new..."
-        warp-cli --accept-tos registration new || true
+        warp-cli --accept-tos registration new  > /dev/null || true
     fi
 fi
 
 # warp-cli --accept-tos proxy port "${PROXY_PORT}"
-warp-cli --accept-tos mode proxy 2>/dev/null || true
-warp-cli --accept-tos dns families "${FAMILIES_MODE:-off}" 2>/dev/null || true
-warp-cli --accept-tos connect
+warp-cli --accept-tos mode proxy > /dev/null || true
+warp-cli --accept-tos dns families "${FAMILIES_MODE:-off}" > /dev/null || true
+warp-cli --accept-tos connect > /dev/null || true
 warp-cli --accept-tos status
 
 # wait $WARP_PID

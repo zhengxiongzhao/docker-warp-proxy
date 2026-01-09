@@ -3,24 +3,29 @@ services:
     # image: zhengxiongzhao/warp-svc:latest
     container_name: cloudflare-warp
     build: ./
+    device_cgroup_rules:
+      - 'c 10:200 rwm'
     ports:
       - 1080:1080
     restart: always
-    privileged: true
-    mem_reservation: 256m
-    mem_limit: 512m
-    memswap_limit: 1g
+    # privileged: true
+    # mem_reservation: 256m
+    # mem_limit: 512m
+    # memswap_limit: 1g
     # network-mode: host
     devices:
       - /dev/net/tun
     cap_add:
       - NET_ADMIN
+      - MKNOD
+      - AUDIT_WRITE
     dns:
       - 1.1.1.1
       - 8.8.8.8
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.src_valid_mark=1
     # extra_hosts:
     #   - "host.docker.internal:host-gateway"
     environment:
@@ -31,12 +36,12 @@ services:
       # LOG_LEVEL: error      
     # volumes:
       # - ./data:/var/lib/cloudflare-warp
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fs -x socks5h://127.0.0.1:1080 https://www.cloudflare.com/cdn-cgi/trace | grep -q 'warp=on'"]
-      interval: 10s
-      timeout: 6s
-      retries: 3
-      start_period: 5s
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -fs -x socks5h://127.0.0.1:1080 https://www.cloudflare.com/cdn-cgi/trace | grep -q 'warp=on'"]
+    #   interval: 10s
+    #   timeout: 6s
+    #   retries: 3
+    #   start_period: 5s
 
     networks:
       - default
