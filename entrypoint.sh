@@ -5,8 +5,6 @@ export WARP_SLEEP=${WARP_SLEEP:-2}
 export GOST_LOGGER_LEVEL=${LOG_LEVEL:-error}
 export GOMAXPROCS=$(nproc)
 
-sudo ulimit -n 65535
-
 if [ ! -e /dev/net/tun ]; then
     sudo mkdir -p /dev/net
     sudo mknod /dev/net/tun c 10 200

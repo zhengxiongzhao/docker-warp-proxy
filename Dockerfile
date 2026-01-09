@@ -1,4 +1,5 @@
 ARG BASE_IMAGE=debian:stable-slim
+
 FROM ${BASE_IMAGE}
 
 ARG GOST_VERSION=3.2.6
